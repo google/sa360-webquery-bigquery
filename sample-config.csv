@@ -1,0 +1,2 @@
+gcsBucketName,projectId,datasetId,tableId,webQueryUrl
+dswqbq-gcs-bucket,bigquery-project-id,bigquery_dataset_id,webquery_report,https://searchads.google.com/ds/reports/download?ay=20700000000000451&av=21700000000010411&rid=290537&of=webqueryphtml&authuser=0
