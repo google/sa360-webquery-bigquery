@@ -10,6 +10,11 @@ There are two ways to programmatically import SA360 data into BigQuery
 
 WebQuery makes reporting easier compared to the API (with less steps), as it allows adding additional entity data (e.g. Business data) in the report, which makes the report simple as compared to an API where this stitching has to be done in a user's program.
 
+### How does it work?
+The tool requires the user's credential to extract Reports from SA360 and also send data into BigQuery.
+
+First the system extracts the Report (in XML format) from SA360 and converts it into CSV on the fly (using SAX parsing), this file is then staged (copied) to GCS, followed by calling BQ API to `load` the data into a separate table.
+
 ## Usage
 1.  Login to your Google Cloud project and generate credentials for an Installed Application ([Details](https://developers.google.com/identity/protocols/OAuth2#installed))
 2.  Update `src/resources/client_secrets.json` with Client-Id and Client secret generated from your Cloud Project.
