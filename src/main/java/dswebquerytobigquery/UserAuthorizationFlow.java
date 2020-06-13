@@ -15,50 +15,66 @@
 package dswebquerytobigquery;
 
 import com.google.api.client.auth.oauth2.Credential;
-import com.google.api.client.extensions.java6.auth.oauth2.AbstractPromptReceiver;
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.util.store.DataStoreFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-/** Service to capture user credentials. */
+/**
+ * Service to capture user credentials.
+ */
 class UserAuthorizationFlow {
 
   /**
-   * Retrieves user's credential from local-storage or prompts the user to provide authorization code.
+   * Retrieves user's credential from local-storage or prompts the user to provide authorization
+   * code.
    *
    * @return the authorized credentials for the user.
    * @throws IOException in case of error in reading/creating credential.
    */
   public static Credential authorize() throws IOException {
+    return
+        new AuthorizationCodeInstalledApp(
+            buildCodeFlow(),
+            CommandLinePromptReceiver.newReceiver())
+            .authorize("user");
+  }
 
-    //Filebased Datastore
+  private static GoogleAuthorizationCodeFlow buildCodeFlow() throws IOException {
+    return new GoogleAuthorizationCodeFlow.Builder(
+        new NetHttpTransport(), new JacksonFactory(), readClientSecrets(),
+        Constants.REQUIRED_SCOPES)
+        .setDataStoreFactory(buildFileDatastoreFactory())
+        .setAccessType("offline")
+        .build();
+  }
+
+  /**
+   * Returns a file based data store to persist OAuth  tokens.
+   */
+  private static DataStoreFactory buildFileDatastoreFactory() throws IOException {
     File datastoreDirectory = new File(Constants.CREDENTIAL_DATASTORE_FOLDER);
     datastoreDirectory.mkdir();
 
-    // load client secrets
-    GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(new JacksonFactory(),
-        new InputStreamReader(
-            UserAuthorizationFlow.class.getResourceAsStream("/client_secrets.json")));
-    // set up authorization code flow
-    GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(
-        new NetHttpTransport(), new JacksonFactory(), clientSecrets,
-        Constants.REQUIRED_SCOPES)
-        .setDataStoreFactory(new FileDataStoreFactory(datastoreDirectory))
-        .setAccessType("offline")
-        .build();
-    // authorize
-    return new AuthorizationCodeInstalledApp(flow, new AbstractPromptReceiver() {
-      @Override
-      public String getRedirectUri() {
-        return "urn:ietf:wg:oauth:2.0:oob";
-      }
-    }).authorize("user");
+    return new FileDataStoreFactory(datastoreDirectory);
+  }
+
+  /**
+   * Returns Client credentials to use with the application by reading the embedded
+   * client_secrets.json file.
+   */
+  private static GoogleClientSecrets readClientSecrets() throws IOException {
+    try (InputStreamReader clientSecretsReader = new InputStreamReader(
+        UserAuthorizationFlow.class.getResourceAsStream("/client_secrets.json"))) {
+      // load client secrets
+      return GoogleClientSecrets.load(new JacksonFactory(), clientSecretsReader);
+    }
   }
 
 }

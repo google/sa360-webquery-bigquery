@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -95,12 +96,16 @@ public class WebQuery {
       return conn.getInputStream();
     }
 
-    /** Parses and outputs the WebQuery HTML to a given CSV File. */
+    /**
+     * Parses and outputs the WebQuery HTML to a given CSV File.
+     */
     public void writeAsCsv(File outputFile) throws IOException, SAXException {
-      Parser xmlParser = new Parser();
-      xmlParser.setContentHandler(Html2CsvParseHandler.forFile(outputFile));
-      xmlParser.parse(new InputSource(new InputStreamReader(getStream(), StandardCharsets.UTF_8)));
+      try (Reader htmlFileReader = new InputStreamReader(getStream(), StandardCharsets.UTF_8)) {
+        Parser xmlParser = new Parser();
+        xmlParser.setContentHandler(Html2CsvParseHandler.forFile(outputFile));
+        xmlParser
+            .parse(new InputSource(htmlFileReader));
+      }
     }
-
   }
 }
