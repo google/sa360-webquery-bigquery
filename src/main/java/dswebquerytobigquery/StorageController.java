@@ -25,7 +25,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
-/** Service to store files into Google Cloud Storage. */
+/**
+ * Service to store files into Google Cloud Storage.
+ */
 class StorageController {
 
   private static final FluentLogger logger = FluentLogger.forEnclosingClass();
@@ -37,12 +39,20 @@ class StorageController {
   }
 
 
+  private static InputStreamContent buildStorageContent(File file) throws IOException {
+    try (BufferedInputStream contentStream = new BufferedInputStream(new FileInputStream(file))) {
+      InputStreamContent content = new InputStreamContent("text/csv", contentStream);
+      content.setLength(file.length());
+      return content;
+    }
+  }
+
   /**
    * Stores the provided local file to Google Cloud Storage.
    *
-   * @param file the local file to be uploaded.
+   * @param file          the local file to be uploaded.
    * @param gcsBucketName the Cloud Storage Bucket name.
-   * @param folder the name of the folder to store the file on GCS.
+   * @param folder        the name of the folder to store the file on GCS.
    * @return the URI of the stored object.
    * @throws IOException in-case there is error uploading the file.
    */
@@ -50,10 +60,6 @@ class StorageController {
     verify(file != null, "Null/Empty file");
     verify(gcsBucketName != null && !gcsBucketName.isEmpty(), "Null Bucket Name");
     verify(folder != null, "Null Folder name");
-
-    InputStreamContent content =
-        new InputStreamContent("text/csv", new BufferedInputStream(new FileInputStream(file)));
-    content.setLength(file.length());
 
     String objectId =
         storageService
@@ -64,7 +70,7 @@ class StorageController {
                     .setContentType("text/csv")
                     .setName(folder + "/" + file.getName())
                     .setBucket(gcsBucketName),
-                content)
+                buildStorageContent(file))
             .execute()
             .getId();
 

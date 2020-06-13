@@ -17,8 +17,8 @@
 
 
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xmlns="http://maven.apache.org/POM/4.0.0"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <artifactId>dswqtobq</artifactId>
 
   <build>
@@ -73,62 +73,48 @@
     </resources>
   </build>
   <dependencies>
-    <!-- https://mvnrepository.com/artifact/com.google.cloud/google-cloud-bigquery -->
     <dependency>
       <artifactId>google-cloud-bigquery</artifactId>
       <groupId>com.google.cloud</groupId>
       <version>1.101.0</version>
     </dependency>
-    <!-- https://mvnrepository.com/artifact/com.google.cloud/google-cloud-storage -->
     <dependency>
       <artifactId>google-cloud-storage</artifactId>
       <groupId>com.google.cloud</groupId>
       <version>1.101.0</version>
     </dependency>
-    <!-- https://mvnrepository.com/artifact/com.google.apis/google-api-services-sheets -->
-    <dependency>
-      <artifactId>google-api-services-sheets</artifactId>
-      <groupId>com.google.apis</groupId>
-      <version>v4-rev604-1.25.0</version>
-    </dependency>
-    <!-- https://mvnrepository.com/artifact/com.google.flogger/flogger -->
     <dependency>
       <artifactId>flogger</artifactId>
       <groupId>com.google.flogger</groupId>
-      <version>0.4</version>
+      <version>0.5.1</version>
     </dependency>
-    <!-- https://mvnrepository.com/artifact/com.google.flogger/flogger-system-backend -->
     <dependency>
       <artifactId>flogger-system-backend</artifactId>
       <groupId>com.google.flogger</groupId>
-      <version>0.4</version>
+      <version>0.5.1</version>
       <scope>runtime</scope>
     </dependency>
-    <!-- https://mvnrepository.com/artifact/com.google.auto.value/auto-value -->
     <dependency>
       <artifactId>auto-value</artifactId>
       <groupId>com.google.auto.value</groupId>
       <scope>provided</scope>
       <version>1.7</version>
     </dependency>
-    <!-- https://mvnrepository.com/artifact/com.google.auto.value/auto-value-annotations -->
     <dependency>
       <artifactId>auto-value-annotations</artifactId>
       <groupId>com.google.auto.value</groupId>
       <version>1.7</version>
     </dependency>
-    <!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
     <dependency>
       <artifactId>guava</artifactId>
       <groupId>com.google.guava</groupId>
-      <version>28.1-jre</version>
+      <version>29.0-jre</version>
     </dependency>
     <dependency>
       <artifactId>google-oauth-client</artifactId>
       <groupId>com.google.oauth-client</groupId>
       <version>1.30.4</version>
     </dependency>
-    <!-- https://mvnrepository.com/artifact/com.google.oauth-client/google-oauth-client-java6 -->
     <dependency>
       <artifactId>google-oauth-client-java6</artifactId>
       <groupId>com.google.oauth-client</groupId>
@@ -139,13 +125,11 @@
       <groupId>com.google.http-client</groupId>
       <version>1.32.1</version>
     </dependency>
-    <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-csv -->
     <dependency>
       <artifactId>commons-csv</artifactId>
       <groupId>org.apache.commons</groupId>
       <version>1.7</version>
     </dependency>
-    <!-- https://mvnrepository.com/artifact/org.ccil.cowan.tagsoup/tagsoup -->
     <dependency>
       <artifactId>tagsoup</artifactId>
       <groupId>org.ccil.cowan.tagsoup</groupId>
