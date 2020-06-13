@@ -50,6 +50,7 @@ class UserAuthorizationFlow {
         new NetHttpTransport(), new JacksonFactory(), clientSecrets,
         Constants.REQUIRED_SCOPES)
         .setDataStoreFactory(new FileDataStoreFactory(datastoreDirectory))
+        .setAccessType("offline")
         .build();
     // authorize
     return new AuthorizationCodeInstalledApp(flow, new AbstractPromptReceiver() {
