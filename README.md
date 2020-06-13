@@ -15,6 +15,9 @@ The tool requires the user's credential to extract Reports from SA360 and also s
 
 First the system extracts the Report (in XML format) from SA360 and converts it into CSV on the fly (using SAX parsing), this file is then staged (copied) to GCS, followed by calling BQ API to `load` the data into a separate table.
 
+## Video Tutorial
+ [![Part-1](https://img.youtube.com/vi/xEMe5CRy6BQ/0.jpg)](https://www.youtube.com/watch?v=xEMe5CRy6BQ)
+
 ## Usage
 1.  Login to your Google Cloud project and generate credentials for an Installed Application ([Details](https://developers.google.com/identity/protocols/OAuth2#installed))
 2.  Update `src/resources/client_secrets.json` with Client-Id and Client secret generated from your Cloud Project.
