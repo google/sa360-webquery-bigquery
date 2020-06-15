@@ -1,3 +1,5 @@
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/google/sa360-webquery-bigquery.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/google/sa360-webquery-bigquery/alerts/)
+
 # SA360 WebQuery to BigQuery Exporter
 
 ## Background
