@@ -21,6 +21,8 @@ import com.google.api.client.auth.oauth2.Credential;
 import com.google.common.flogger.FluentLogger;
 import java.io.File;
 import java.io.IOException;
+import java.time.Clock;
+import java.time.Instant;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Stream;
@@ -40,8 +42,8 @@ class Main {
     logger.atFine().log("Loaded %s configurations", transferConfigs.length);
 
     // Get Google Credential
-    Credential credential = UserAuthorizationFlow.authorize();
-    logger.atInfo().log("access_token: " + credential.getAccessToken());
+    Credential credential = Authorizer.authorize();
+    logCredentialInfo(credential);
 
     ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(MAX_THREADS);
 
@@ -52,5 +54,14 @@ class Main {
         .forEach(executor::execute);
 
     executor.shutdown();
+  }
+
+  private static void logCredentialInfo(Credential credential) {
+    logger.atInfo()
+        .log("access_token: %s%nExpires:%s%nrefreshTokenPresent: %s",
+            credential.getAccessToken(),
+            Instant.ofEpochMilli(credential.getExpirationTimeMilliseconds())
+                .atZone(Clock.systemDefaultZone().getZone()),
+            (credential.getRefreshToken() != null));
   }
 }

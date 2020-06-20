@@ -40,11 +40,11 @@ class StorageController {
 
 
   private static InputStreamContent buildStorageContent(File file) throws IOException {
-    try (BufferedInputStream contentStream = new BufferedInputStream(new FileInputStream(file))) {
-      InputStreamContent content = new InputStreamContent("text/csv", contentStream);
-      content.setLength(file.length());
-      return content;
-    }
+    InputStreamContent content = new InputStreamContent(
+        "text/csv", new BufferedInputStream(new FileInputStream(file)));
+    content.setLength(file.length());
+    content.setCloseInputStream(true);
+    return content;
   }
 
   /**
