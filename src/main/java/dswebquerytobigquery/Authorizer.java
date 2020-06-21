@@ -15,11 +15,9 @@
 package dswebquerytobigquery;
 
 import com.google.api.client.auth.oauth2.Credential;
-import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
+import com.google.api.client.auth.oauth2.StoredCredential;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
-import com.google.api.client.googleapis.auth.oauth2.GoogleRefreshTokenRequest;
-import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.store.DataStoreFactory;
@@ -50,55 +48,32 @@ class Authorizer {
    * @throws IOException in case of error in reading/creating credential.
    */
   public static Credential authorize() throws IOException {
-    Credential credential = buildCodeFlow().loadCredential(DATASTORE_USER_NAME);
-
-    CredentialState credentialState = identifyCredentialState(credential);
-    logger.atInfo().log("Credential state: %s", credentialState);
-
-    switch (credentialState) {
-      case NO_TOKENS:
-      case NO_CREDENTIAL:
-        return new AuthorizationCodeInstalledApp(
-            buildCodeFlow(),
-            CommandLinePromptReceiver.newReceiver())
-            .authorize(DATASTORE_USER_NAME);
-      case VALID_NO_REFRESH_TOKEN:
-      case VALID:
-        return credential;
-      case EXPIRED_WITH_REFRESH_TOKEN:
-        return refreshCredentials(credential);
-      case EXPIRED_NO_REFRESH_TOKEN:
-        throw new IllegalStateException("Access Token Expired, No Refresh Token found");
-    }
-
-    throw new IllegalStateException(
-        "Unexpected value: " + credentialState + " (cred: " + credential + ")");
+    return refreshAndStoreCredential(buildCodeFlow().loadCredential(DATASTORE_USER_NAME));
   }
 
-  private static CredentialState identifyCredentialState(Credential credential) {
+  /**
+   * Returns a valid credential by refreshing access token if expired.
+   */
+  private static Credential refreshAndStoreCredential(Credential credential) throws IOException {
+    if (credential.getExpirationTimeMilliseconds() < Clock.systemUTC().millis()) {
+      logger.atInfo().log("Access Token Expired. Refreshing.");
+      credential.refreshToken();
 
-    if (credential == null) {
-      return CredentialState.NO_CREDENTIAL;
-    } else if (credential.getAccessToken() == null && credential.getRefreshToken() == null) {
-      return CredentialState.NO_TOKENS;
-    } else if (credential.getAccessToken() != null && credential.getRefreshToken() != null
-        && credential.getExpirationTimeMilliseconds() <= Clock.systemUTC().millis()) {
-      return CredentialState.EXPIRED_WITH_REFRESH_TOKEN;
-    } else if (credential.getAccessToken() != null && credential.getRefreshToken() == null
-        && credential.getExpirationTimeMilliseconds() <= Clock.systemUTC().millis()) {
-      return CredentialState.EXPIRED_NO_REFRESH_TOKEN;
-    } else if (credential.getAccessToken() != null && credential.getRefreshToken() == null
-        && credential.getExpirationTimeMilliseconds() > Clock.systemUTC().millis()) {
-      return CredentialState.VALID_NO_REFRESH_TOKEN;
-    } else if (credential.getAccessToken() != null && credential.getRefreshToken() != null
-        && credential.getExpirationTimeMilliseconds() > Clock.systemUTC().millis()) {
-      return CredentialState.VALID;
+      StoredCredential
+          .getDefaultDataStore(buildFileDatastoreFactory())
+          .set(DATASTORE_USER_NAME,
+              new StoredCredential()
+                  .setRefreshToken(credential.getRefreshToken())
+                  .setAccessToken(credential.getAccessToken())
+                  .setExpirationTimeMilliseconds(credential.getExpirationTimeMilliseconds()));
     }
 
-    return CredentialState.NO_CREDENTIAL;
+    return credential;
   }
 
-
+  /**
+   * Returns a Authorization flow object to easily generate and store user credentials.
+   */
   private static GoogleAuthorizationCodeFlow buildCodeFlow() throws IOException {
     return new GoogleAuthorizationCodeFlow.Builder(
         new NetHttpTransport(), new JacksonFactory(), readClientSecrets(),
@@ -106,21 +81,6 @@ class Authorizer {
         .setDataStoreFactory(buildFileDatastoreFactory())
         .setAccessType("offline")
         .build();
-  }
-
-  private static Credential refreshCredentials(Credential credential) throws IOException {
-    GoogleClientSecrets secrets = readClientSecrets();
-
-    GoogleTokenResponse response =
-        new GoogleRefreshTokenRequest(
-            new NetHttpTransport(),
-            new JacksonFactory(),
-            credential.getRefreshToken(),
-            secrets.getDetails().getClientId(),
-            secrets.getDetails().getClientSecret()).execute();
-    response.setRefreshToken(credential.getRefreshToken());
-
-    return buildCodeFlow().createAndStoreCredential(response, DATASTORE_USER_NAME);
   }
 
   /**
@@ -143,9 +103,5 @@ class Authorizer {
       // load client secrets
       return GoogleClientSecrets.load(new JacksonFactory(), clientSecretsReader);
     }
-  }
-
-  private enum CredentialState {
-    NO_CREDENTIAL, NO_TOKENS, EXPIRED_WITH_REFRESH_TOKEN, EXPIRED_NO_REFRESH_TOKEN, VALID_NO_REFRESH_TOKEN, VALID
   }
 }
