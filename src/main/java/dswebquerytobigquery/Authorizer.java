@@ -16,6 +16,7 @@ package dswebquerytobigquery;
 
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.auth.oauth2.StoredCredential;
+import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -55,6 +56,13 @@ class Authorizer {
    * Returns a valid credential by refreshing access token if expired.
    */
   private static Credential refreshAndStoreCredential(Credential credential) throws IOException {
+    if (credential == null) {
+      return new AuthorizationCodeInstalledApp(
+          buildCodeFlow(),
+          CommandLinePromptReceiver.newReceiver())
+          .authorize(DATASTORE_USER_NAME);
+    }
+
     if (credential.getExpirationTimeMilliseconds() < Clock.systemUTC().millis()) {
       logger.atInfo().log("Access Token Expired. Refreshing.");
       credential.refreshToken();
