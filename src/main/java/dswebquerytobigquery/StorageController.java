@@ -14,7 +14,8 @@
 
 package dswebquerytobigquery;
 
-import static com.google.common.base.Verify.verify;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.api.client.http.InputStreamContent;
 import com.google.api.services.storage.Storage;
@@ -57,9 +58,9 @@ class StorageController {
    * @throws IOException in-case there is error uploading the file.
    */
   public String uploadFile(File file, String gcsBucketName, String folder) throws IOException {
-    verify(file != null, "Null/Empty file");
-    verify(gcsBucketName != null && !gcsBucketName.isEmpty(), "Null Bucket Name");
-    verify(folder != null, "Null Folder name");
+    checkNotNull(file != null, "Null/Empty file");
+    checkArgument(gcsBucketName != null && !gcsBucketName.isEmpty(), "Null Bucket Name");
+    checkNotNull(folder != null, "Null Folder name");
 
     String objectId =
         storageService
