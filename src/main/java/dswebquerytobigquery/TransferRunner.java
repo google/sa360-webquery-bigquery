@@ -16,8 +16,8 @@ package dswebquerytobigquery;
 
 import static dswebquerytobigquery.Constants.CSV_FILE_PREFIX;
 
-import com.google.api.client.auth.oauth2.Credential;
-import com.google.common.flogger.FluentLogger;
+import com.google.auth.oauth2.UserCredentials;
+import com.google.common.flogger.GoogleLogger;
 import java.io.File;
 
 /**
@@ -25,16 +25,17 @@ import java.io.File;
  */
 class TransferRunner implements Runnable {
 
-  private static final FluentLogger logger = FluentLogger.forEnclosingClass();
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   private final TransferConfig xferConfig;
-  private final Credential credential;
+  private final UserCredentials credential;
   private final BigQueryFactory bigQueryFactory;
   private final StorageServiceFactory storageServiceFactory;
 
   public TransferRunner(TransferConfig xferConfig,
-      Credential credential, BigQueryFactory bigQueryFactory,
-      StorageServiceFactory storageServiceFactory) {
+                        UserCredentials credential,
+                        BigQueryFactory bigQueryFactory,
+                        StorageServiceFactory storageServiceFactory) {
     this.xferConfig = xferConfig;
     this.credential = credential;
     this.bigQueryFactory = bigQueryFactory;
@@ -45,35 +46,37 @@ class TransferRunner implements Runnable {
   public void run() {
     logger.atInfo().log("Processing: %s", xferConfig);
 
-    WebQuery webQuery = new WebQuery(xferConfig.getWebQueryUrl());
+    var webQuery = new WebQuery(xferConfig.getWebQueryUrl(), credential);
 
     try {
       logger.atInfo()
           .log("[Report %s] starting: url: %s", webQuery.getReportId(), webQuery.getQueryUrl());
 
       // save to local file
-      File tempCsvFile = File.createTempFile(CSV_FILE_PREFIX, ".csv");
+      var tempCsvFile = File.createTempFile(CSV_FILE_PREFIX, ".csv");
       logger.atInfo()
           .log("[Report %s] localFile: %s", webQuery.getReportId(), tempCsvFile.getAbsolutePath());
 
       // Convert to CSV File
-      webQuery
-          .read(credential)
-          .writeAsCsv(tempCsvFile);
+      webQuery.read().writeAsCsv(tempCsvFile);
 
       // Copy to GCS
-      String gcsLink = new StorageController(storageServiceFactory.buildStorageService(credential))
-          .uploadFile(tempCsvFile, xferConfig.getTempGcsBucketName(), "tmp");
+      var gcsLink = new StorageController(storageServiceFactory.buildStorageService())
+          .uploadFile(tempCsvFile, xferConfig.getTempGcsBucketName(), "sa360tmp");
 
       logger.atInfo().log("GCS Link: %s", gcsLink);
 
       // Issue BigQuery command to consume file into a table
-      String bqJobId =
+      var bqJob =
           new BigQueryProcessor(xferConfig.getBigQueryConfig(),
-              bigQueryFactory.getBigQueryService(credential))
+              bigQueryFactory.getBigQueryService(xferConfig.getBigQueryConfig().getProjectId()))
               .loadFileInTable(gcsLink);
 
-      logger.atInfo().log("[Report %s] BQ Job Id: %s", webQuery.getReportId(), bqJobId);
+      logger.atInfo().log(
+        "[Report %s] BQ JobId:%s%nBigquery Job link: https://console.cloud.google.com/bigquery?project=%s&page=jobs",
+        webQuery.getReportId(),
+        bqJob.getJobId().getJob(),
+        bqJob.getJobId().getProject());
       logger.atInfo().log("[Report %s] finished  %s", webQuery.getReportId(), xferConfig);
     } catch (Exception exception) {
       logger.atSevere().withCause(exception)

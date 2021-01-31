@@ -17,35 +17,27 @@ package dswebquerytobigquery;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.api.client.http.InputStreamContent;
-import com.google.api.services.storage.Storage;
-import com.google.api.services.storage.model.StorageObject;
-import com.google.common.flogger.FluentLogger;
-import java.io.BufferedInputStream;
+import com.google.cloud.storage.Blob;
+import com.google.cloud.storage.BlobId;
+import com.google.cloud.storage.BlobInfo;
+import com.google.cloud.storage.Storage;
+import com.google.common.flogger.GoogleLogger;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 /**
  * Service to store files into Google Cloud Storage.
  */
 class StorageController {
 
-  private static final FluentLogger logger = FluentLogger.forEnclosingClass();
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   private final Storage storageService;
 
   public StorageController(Storage storageService) {
     this.storageService = storageService;
-  }
-
-
-  private static InputStreamContent buildStorageContent(File file) throws IOException {
-    InputStreamContent content = new InputStreamContent(
-        "text/csv", new BufferedInputStream(new FileInputStream(file)));
-    content.setLength(file.length());
-    content.setCloseInputStream(true);
-    return content;
   }
 
   /**
@@ -57,27 +49,23 @@ class StorageController {
    * @return the URI of the stored object.
    * @throws IOException in-case there is error uploading the file.
    */
-  public String uploadFile(File file, String gcsBucketName, String folder) throws IOException {
-    checkNotNull(file != null, "Null/Empty file");
+  public Blob uploadFile(File file, String gcsBucketName, String folder) throws IOException {
+    checkNotNull(file, "Null/Empty file");
+    checkNotNull(folder, "Null Folder name");
     checkArgument(gcsBucketName != null && !gcsBucketName.isEmpty(), "Null Bucket Name");
-    checkNotNull(folder != null, "Null Folder name");
 
-    String objectId =
+    var gcsObject =
         storageService
-            .objects()
-            .insert(
-                gcsBucketName,
-                new StorageObject()
-                    .setContentType("text/csv")
-                    .setName(folder + "/" + file.getName())
-                    .setBucket(gcsBucketName),
-                buildStorageContent(file))
-            .execute()
-            .getId();
+          .create(
+            BlobInfo
+              .newBuilder(BlobId.of(gcsBucketName, String.format("%s/%s", folder, file.getName())))
+              .setContentType("text/csv")
+              .build(),
+            Files.readAllBytes(Paths.get(file.getAbsolutePath())));
 
-    logger.atInfo().log("GCS File Id: " + objectId);
+    logger.atInfo().log("GCS File Id: %s", gcsObject.getBlobId());
 
     // create a gs link to the file
-    return "gs://" + gcsBucketName + "/" + folder + "/" + file.getName();
+    return gcsObject;
   }
 }

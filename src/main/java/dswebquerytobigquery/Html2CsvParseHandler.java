@@ -17,7 +17,7 @@ package dswebquerytobigquery;
 import static dswebquerytobigquery.WqToBqDataTypeMapper.translateWebQueryTypeToBigQueryType;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.flogger.FluentLogger;
+import com.google.common.flogger.GoogleLogger;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -39,7 +39,7 @@ import org.xml.sax.helpers.DefaultHandler;
  */
 public class Html2CsvParseHandler extends DefaultHandler {
 
-  private static final FluentLogger logger = FluentLogger.forEnclosingClass();
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   private final File outputFile;
   private final String processingDateString =
@@ -175,7 +175,7 @@ public class Html2CsvParseHandler extends DefaultHandler {
     }
 
     if (qName.equals("td")) {
-      rowAccumulator.add(textAccumulator.toString());
+      rowAccumulator.add(sanitizeForCsv(textAccumulator.toString()));
     }
 
     if (bodyElementStarted && qName.equals("tr")) {
@@ -217,5 +217,31 @@ public class Html2CsvParseHandler extends DefaultHandler {
         .replaceAll("[^A-Za-z0-9_]", "_") // Replace all non-Alphanumeric chars
         .replaceAll("_{2,}", "_") // Replace multiple underscrores with one
         .toLowerCase();
+  }
+
+  private static String sanitizeForCsv(String cellData) {
+    if (cellData == null || cellData.equals("") || cellData.equals("\"\"")) {
+      return "";
+    }
+
+    var resultBuilder = new StringBuilder(cellData);
+    // Look for doublequotes, escape as necessary.
+    var lastIndex = 0;
+    while (resultBuilder.indexOf("\"", lastIndex) >= 0) {
+      var quoteIndex = resultBuilder.indexOf("\"", lastIndex);
+      resultBuilder.replace(quoteIndex, quoteIndex + 1, "\"\"");
+      lastIndex = quoteIndex + 2;
+    }
+
+    var firstChar = cellData.charAt(0);
+    var lastChar = cellData.charAt(cellData.length() - 1);
+
+    if (cellData.contains(",") || // Check for commas
+      cellData.contains("\n") ||  // Check for line breaks
+      Character.isWhitespace(firstChar) || // Check for leading whitespace.
+      Character.isWhitespace(lastChar)) { // Check for trailing whitespace
+      resultBuilder.insert(0, "\"").append("\""); // Wrap in doublequotes.
+    }
+    return resultBuilder.toString();
   }
 }

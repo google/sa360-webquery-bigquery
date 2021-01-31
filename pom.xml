@@ -17,8 +17,25 @@
 
 
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xmlns="http://maven.apache.org/POM/4.0.0"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <groupId>gmp-tools</groupId>
+  <artifactId>dswqtobq</artifactId>
+  <modelVersion>4.0.0</modelVersion>
+
+  <name>DS Web Query to BigQuery</name>
+  <properties>
+    <auto-value.version>1.7.4</auto-value.version>
+    <cloud-libraries-bom.version>16.3.0</cloud-libraries-bom.version>
+    <flogger.version>0.5.1</flogger.version>
+    <google-oauth-client.version>1.31.4</google-oauth-client.version>
+    <guava.version>29.0-jre</guava.version>
+    <release>11</release>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+  <version>1.0.1</version>
+
   <build>
     <finalName>${project.artifactId}-${project.version}</finalName>
     <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
@@ -35,6 +52,7 @@
         </plugin>
         <plugin>
           <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.8.1</version>
           <configuration>
             <annotationProcessorPaths>
               <path>
@@ -43,8 +61,8 @@
                 <version>${auto-value.version}</version>
               </path>
             </annotationProcessorPaths>
+            <release>${release}</release>
           </configuration>
-          <version>3.8.1</version>
         </plugin>
         <plugin>
           <artifactId>maven-assembly-plugin</artifactId>
@@ -85,85 +103,73 @@
 
   <dependencies>
     <dependency>
+      <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-bigquery</artifactId>
-      <groupId>com.google.cloud</groupId>
     </dependency>
     <dependency>
+      <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-storage</artifactId>
-      <groupId>com.google.cloud</groupId>
     </dependency>
     <dependency>
+      <groupId>com.google.flogger</groupId>
       <artifactId>flogger</artifactId>
-      <groupId>com.google.flogger</groupId>
       <version>${flogger.version}</version>
     </dependency>
     <dependency>
+      <groupId>com.google.flogger</groupId>
+      <artifactId>google-extensions</artifactId>
+      <version>${flogger.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.flogger</groupId>
       <artifactId>flogger-system-backend</artifactId>
-      <groupId>com.google.flogger</groupId>
-      <scope>runtime</scope>
       <version>${flogger.version}</version>
+      <scope>runtime</scope>
     </dependency>
     <dependency>
-      <artifactId>auto-value-annotations</artifactId>
       <groupId>com.google.auto.value</groupId>
-      <scope>provided</scope>
+      <artifactId>auto-value-annotations</artifactId>
       <version>${auto-value.version}</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
-      <artifactId>guava</artifactId>
       <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
     </dependency>
     <dependency>
-      <artifactId>google-oauth-client-java6</artifactId>
       <groupId>com.google.oauth-client</groupId>
+      <artifactId>google-oauth-client-java6</artifactId>
       <version>${google-oauth-client.version}</version>
     </dependency>
     <dependency>
-      <artifactId>commons-csv</artifactId>
       <groupId>org.apache.commons</groupId>
+      <artifactId>commons-csv</artifactId>
       <version>1.7</version>
     </dependency>
     <dependency>
-      <artifactId>tagsoup</artifactId>
       <groupId>org.ccil.cowan.tagsoup</groupId>
+      <artifactId>tagsoup</artifactId>
       <version>1.2.1</version>
     </dependency>
   </dependencies>
-  <artifactId>dswqtobq</artifactId>
+
   <dependencyManagement>
     <dependencies>
       <!-- Guava commons -->
       <dependency>
-        <artifactId>guava</artifactId>
         <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
         <version>${guava.version}</version>
       </dependency>
 
       <!-- Google Cloud BOM -->
       <dependency>
-        <artifactId>libraries-bom</artifactId>
         <groupId>com.google.cloud</groupId>
-        <scope>import</scope>
-        <type>pom</type>
+        <artifactId>libraries-bom</artifactId>
         <version>${cloud-libraries-bom.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>
-  <groupId>gmp-tools</groupId>
-
-  <modelVersion>4.0.0</modelVersion>
-
-  <name>DS Web Query to BigQuery</name>
-  <properties>
-    <auto-value.version>1.7.4</auto-value.version>
-    <cloud-libraries-bom.version>10.0.0</cloud-libraries-bom.version>
-    <flogger.version>0.5.1</flogger.version>
-    <google-oauth-client.version>1.31.0</google-oauth-client.version>
-    <guava.version>29.0-jre</guava.version>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
-
-  <version>1.0.1</version>
 </project>

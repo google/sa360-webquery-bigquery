@@ -14,23 +14,19 @@
 
 package dswebquerytobigquery;
 
-import com.google.api.client.auth.oauth2.Credential;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.services.bigquery.Bigquery;
+import com.google.auth.Credentials;
+import com.google.cloud.bigquery.BigQuery;
+import com.google.cloud.bigquery.BigQueryOptions;
 
-/** Factory to build BigQuery client. */
+/**
+ * Factory to build BigQuery client.
+ */
 public interface BigQueryFactory {
 
-  static BigQueryFactory getDefaultInstance() {
-    return (credential) -> new Bigquery.Builder(
-        new NetHttpTransport(),
-        new JacksonFactory(),
-        credential)
-        .setApplicationName(Constants.APPLICATION_NAME)
-        .build();
+  static BigQueryFactory getDefaultInstance(Credentials credentials) {
+    return projectId -> BigQueryOptions.newBuilder().setCredentials(credentials).setProjectId(projectId).build().getService();
   }
 
-  Bigquery getBigQueryService(Credential credential);
+  BigQuery getBigQueryService(String projectId);
 
 }
