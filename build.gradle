@@ -1,0 +1,45 @@
+apply plugin : "java"
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+def autoValueVersion = "1.7.4"
+def floggerVersion = "0.5.1"
+def guavaVersion = "30.1-jre"
+
+
+dependencies {
+    implementation "com.google.guava:guava:${guavaVersion}"
+
+    implementation "com.google.flogger:flogger:${floggerVersion}"
+    implementation "com.google.flogger:google-extensions:${floggerVersion}"
+    runtimeOnly "com.google.flogger:flogger-system-backend:${floggerVersion}"
+
+    implementation "com.google.cloud:google-cloud-bigquery:1.126.3"
+    implementation "com.google.cloud:google-cloud-storage:1.113.8"
+    implementation "com.google.oauth-client:google-oauth-client-java6:1.31.4"
+    implementation "org.apache.commons:commons-csv:1.8"
+    implementation "org.ccil.cowan.tagsoup:tagsoup:1.2.1"
+
+    compileOnly "com.google.auto.value:auto-value-annotations:${autoValueVersion}"
+    annotationProcessor "com.google.auto.value:auto-value:${autoValueVersion}"
+}
+
+group = 'gmp-tools'
+version = '1.0.2'
+description = 'DS Web Query to BigQuery'
+java.sourceCompatibility = JavaVersion.VERSION_11
+
+task fatJar(type: Jar) {
+    manifest {
+        attributes "Main-Class": "dswebquerytobigquery.Main"
+    }
+    archiveClassifier = "all"
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    with jar
+}

@@ -52,7 +52,7 @@ First the system extracts the Report (in XML format) from SA360 and converts it 
 ### Compile and run
 1.  Compile and package source code into an executable JAR. 
     ```shell
-    mvn clean compile assembly:single
+    gradle clean fatJar
     ```
 
 1.  Create a [Configuration file (csv)](#csv-file-format) with specified headers. (consider `sample-config.csv` as a reference)
@@ -60,9 +60,9 @@ First the system extracts the Report (in XML format) from SA360 and converts it 
 1.  Run the jar file as
     ```shell
     # run the JAR file by specifying the configuraiton file as first parameter
-    java -jar dswqtobq-1.0-SNAPSHOT-jar-with-dependencies.jar <location of configuration CSV file>
+    java -jar build/libs/dswqtobq-1.0.2-all.jar <location of configuration CSV file>
     ```
-    >  Optionally, copy the jar file to the final executable location `cp target/dswqtobq-1.0-SNAPSHOT-jar-with-dependencies.jar~/`
+    >  Optionally, copy the jar file to the final executable location `cp build/libs/dswqtobq-1.0.2-all.jar~/`
 
 1.  This will prompt you to Login using your browser and store the credentials for next time, 
   If you are running this application on a VM/terminal, you can copy/paste the URL to your browser and paste the code back on the command line prompt.
