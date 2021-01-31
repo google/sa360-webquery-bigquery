@@ -14,16 +14,20 @@
 
 package dswebquerytobigquery;
 
-import com.google.api.services.bigquery.Bigquery;
-import com.google.api.services.bigquery.model.Job;
-import com.google.api.services.bigquery.model.JobConfiguration;
-import com.google.api.services.bigquery.model.JobConfigurationLoad;
-import com.google.api.services.bigquery.model.TableReference;
+import static com.google.common.collect.ImmutableList.toImmutableList;
+
+import com.google.cloud.bigquery.BigQuery;
+import com.google.cloud.bigquery.FormatOptions;
+import com.google.cloud.bigquery.Job;
+import com.google.cloud.bigquery.JobInfo;
+import com.google.cloud.bigquery.LoadJobConfiguration;
+import com.google.cloud.bigquery.TableId;
+import com.google.cloud.storage.Blob;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
+import java.util.stream.Stream;
 
 /**
  * BigQuery client to load the CSV file from Cloud Storage into a table.
@@ -31,10 +35,10 @@ import java.util.Arrays;
 class BigQueryProcessor {
 
   private final BigQueryConfig outputTableInfo;
-  private final Bigquery bigQueryService;
+  private final BigQuery bigQueryService;
 
   public BigQueryProcessor(BigQueryConfig outputTableInfo,
-      Bigquery bigQueryService) {
+                           BigQuery bigQueryService) {
     this.outputTableInfo = outputTableInfo;
     this.bigQueryService = bigQueryService;
   }
@@ -42,37 +46,38 @@ class BigQueryProcessor {
   /**
    * Creates a Load job on BigQuery for the provided CSV file on Cloud Bucket.
    *
-   * @param gcsFileNames the list of CSV files to be uploaded into the given table. First file
-   *                     should contain headers.
+   * @param gcsBlobs the list of GCS blobs for CSV files to be uploaded into the given table.
+   *                 First file should contain headers.
    * @return BigQuery load job id.
    */
-  public String loadFileInTable(String... gcsFileNames) throws IOException {
-    return bigQueryService.jobs().insert(outputTableInfo.getProjectId(), buildLoadJob(gcsFileNames))
-        .execute().getId();
+  public Job loadFileInTable(Blob... gcsBlobs) {
+    var gcsFileNames =
+      Stream.of(gcsBlobs)
+        .map(blob -> String.format("gs://%s/%s", blob.getBucket(), blob.getName()))
+        .collect(toImmutableList());
+
+    return bigQueryService.create(
+      JobInfo.newBuilder(
+        LoadJobConfiguration.newBuilder(
+          TableId.of(
+            outputTableInfo.getProjectId(),
+            outputTableInfo.getDatasetId(),
+            outputTableInfo.getTableId() + "_" + getDateSuffix()),
+          gcsFileNames,
+          FormatOptions.csv()
+            .toBuilder()
+            .setSkipLeadingRows(1)
+            .setAllowQuotedNewLines(true)
+            .build())
+          .setAutodetect(true)
+          .setWriteDisposition(JobInfo.WriteDisposition.WRITE_TRUNCATE)
+          .build())
+        .build());
   }
 
-  /** Returns a BQ Load job configuration. */
-  private Job buildLoadJob(String[] gcsFileNames) {
-    return new Job()
-        .setConfiguration(
-            new JobConfiguration()
-                .setLoad(
-                    new JobConfigurationLoad()
-                        .setDestinationTable(
-                            new TableReference()
-                                .setProjectId(outputTableInfo.getProjectId())
-                                .setDatasetId(outputTableInfo.getDatasetId())
-                                .setTableId(outputTableInfo.getTableId() + "_" + getDateSuffix()))
-                        .setWriteDisposition("WRITE_TRUNCATE")
-                        .setAutodetect(true)
-                        .setSkipLeadingRows(1)
-                        .setSourceFormat("CSV")
-                        .setSourceUris(Arrays.asList(gcsFileNames))
-                )
-        );
-  }
-
-  /** Returns today's date at UTC in YYYYMMDD format to be used a suffix for table-name.*/
+  /**
+   * Returns today's date at UTC in YYYYMMDD format to be used a suffix for table-name.
+   */
   private static String getDateSuffix() {
     return DateTimeFormatter.ofPattern("yyyyMMdd").format(LocalDate.now(ZoneOffset.UTC));
   }

@@ -23,7 +23,7 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.store.DataStoreFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
-import com.google.common.flogger.FluentLogger;
+import com.google.common.flogger.GoogleLogger;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -34,7 +34,7 @@ import java.time.Clock;
  */
 class Authorizer {
 
-  private static final FluentLogger logger = FluentLogger.forEnclosingClass();
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   private static final String DATASTORE_USER_NAME = "localUser";
 
@@ -48,22 +48,20 @@ class Authorizer {
    * @return the authorized credentials for the user.
    * @throws IOException in case of error in reading/creating credential.
    */
-  public static Credential authorize() throws IOException {
+  public static com.google.auth.oauth2.UserCredentials authorize() throws IOException {
     return refreshAndStoreCredential(buildCodeFlow().loadCredential(DATASTORE_USER_NAME));
   }
 
   /**
    * Returns a valid credential by refreshing access token if expired.
    */
-  private static Credential refreshAndStoreCredential(Credential credential) throws IOException {
+  private static com.google.auth.oauth2.UserCredentials refreshAndStoreCredential(Credential credential) throws IOException {
     if (credential == null) {
-      return new AuthorizationCodeInstalledApp(
+      credential = new AuthorizationCodeInstalledApp(
           buildCodeFlow(),
           CommandLinePromptReceiver.newReceiver())
           .authorize(DATASTORE_USER_NAME);
-    }
-
-    if (credential.getExpirationTimeMilliseconds() < Clock.systemUTC().millis()) {
+    } else if (credential.getExpirationTimeMilliseconds() < Clock.systemUTC().millis()) {
       logger.atInfo().log("Access Token Expired. Refreshing.");
       credential.refreshToken();
 
@@ -76,7 +74,7 @@ class Authorizer {
                   .setExpirationTimeMilliseconds(credential.getExpirationTimeMilliseconds()));
     }
 
-    return credential;
+    return Credentials.usingSecrets(readClientSecrets()).forCredential(credential);
   }
 
   /**
@@ -84,7 +82,7 @@ class Authorizer {
    */
   private static GoogleAuthorizationCodeFlow buildCodeFlow() throws IOException {
     return new GoogleAuthorizationCodeFlow.Builder(
-        new NetHttpTransport(), new JacksonFactory(), readClientSecrets(),
+        new NetHttpTransport(), JacksonFactory.getDefaultInstance(), readClientSecrets(),
         Constants.REQUIRED_SCOPES)
         .setDataStoreFactory(buildFileDatastoreFactory())
         .setAccessType("offline")
@@ -95,7 +93,8 @@ class Authorizer {
    * Returns a file based data store to persist OAuth  tokens.
    */
   private static DataStoreFactory buildFileDatastoreFactory() throws IOException {
-    File datastoreDirectory = new File(Constants.CREDENTIAL_DATASTORE_FOLDER);
+    var datastoreDirectory = new File(Constants.CREDENTIAL_DATASTORE_FOLDER);
+    //noinspection ResultOfMethodCallIgnored
     datastoreDirectory.mkdir();
 
     return new FileDataStoreFactory(datastoreDirectory);
@@ -106,10 +105,10 @@ class Authorizer {
    * client_secrets.json file.
    */
   private static GoogleClientSecrets readClientSecrets() throws IOException {
-    try (InputStreamReader clientSecretsReader = new InputStreamReader(
+    try (var clientSecretsReader = new InputStreamReader(
         Authorizer.class.getResourceAsStream("/client_secrets.json"))) {
       // load client secrets
-      return GoogleClientSecrets.load(new JacksonFactory(), clientSecretsReader);
+      return GoogleClientSecrets.load(JacksonFactory.getDefaultInstance(), clientSecretsReader);
     }
   }
 }

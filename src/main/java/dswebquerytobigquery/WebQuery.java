@@ -16,7 +16,7 @@ package dswebquerytobigquery;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.api.client.auth.oauth2.Credential;
+import com.google.auth.oauth2.UserCredentials;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,19 +38,20 @@ public class WebQuery {
 
   private final String queryUrl;
   private final String reportId;
+  private final UserCredentials credential;
 
-  public WebQuery(String queryUrl) {
+  public WebQuery(String queryUrl, UserCredentials credential) {
     this.queryUrl = checkNotNull(queryUrl);
     this.reportId = extractReportId(queryUrl);
+    this.credential = credential;
   }
 
   /**
    * Returns a reader to the given WebQuery by opening a Socket connection and creating an {@link
    * InputStream}.
    *
-   * @param credential the User's credential to retrieve the WebQuery results.
    */
-  public WebQueryReader read(Credential credential) {
+  public WebQueryReader read() {
     return new WebQueryReader(credential);
   }
 
@@ -75,9 +76,9 @@ public class WebQuery {
    */
   public class WebQueryReader {
 
-    private final Credential credential;
+    private final UserCredentials credential;
 
-    private WebQueryReader(Credential credential) {
+    private WebQueryReader(UserCredentials credential) {
       this.credential = checkNotNull(credential);
     }
 
@@ -91,7 +92,7 @@ public class WebQuery {
 
       HttpURLConnection conn = (HttpURLConnection) new URL(queryUrl).openConnection();
       conn.setRequestMethod("GET");
-      conn.setRequestProperty("Authorization", "Bearer " + credential.getAccessToken());
+      conn.setRequestProperty("Authorization", "Bearer " + credential.getAccessToken().getTokenValue());
 
       return conn.getInputStream();
     }

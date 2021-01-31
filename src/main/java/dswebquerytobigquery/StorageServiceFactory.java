@@ -14,22 +14,20 @@
 
 package dswebquerytobigquery;
 
-import com.google.api.client.auth.oauth2.Credential;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.services.storage.Storage;
+import com.google.auth.Credentials;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageOptions;
 
-/** Factory to build Google Cloud Storage client. */
+/**
+ * Factory to build Google Cloud Storage client.
+ */
 public interface StorageServiceFactory {
 
-  static StorageServiceFactory getDefaultInstance() {
-    return (credential) -> new Storage.Builder(
-        new NetHttpTransport(),
-        new JacksonFactory(),
-        credential)
-        .setApplicationName(Constants.APPLICATION_NAME)
-        .build();
+  static StorageServiceFactory getDefaultInstance(Credentials credential) {
+    return () -> StorageOptions.newBuilder()
+      .setCredentials(credential)
+      .build().getService();
   }
 
-  Storage buildStorageService(Credential credential);
+  Storage buildStorageService();
 }

@@ -5,7 +5,7 @@
 ## Background
 Large SA360 customers want to build custom reports by combining their 1st party data with paid-search data.
 
-Easiest way to achieve that is by combining the data in BigQuery.
+The Easiest way to achieve that is by combining the data in BigQuery.
 There are two ways to programmatically import SA360 data into BigQuery
 1. [API](https://developers.google.com/search-ads/v2/how-tos/reporting)
 2. [Web Query](https://support.google.com/searchads/answer/2870738?hl=en)
@@ -21,29 +21,57 @@ First the system extracts the Report (in XML format) from SA360 and converts it 
  [![Part-1](https://img.youtube.com/vi/xEMe5CRy6BQ/0.jpg)](https://www.youtube.com/watch?v=xEMe5CRy6BQ)
 
 ## Usage
-1.  Login to your Google Cloud project and generate credentials for an Installed Application ([Details](https://developers.google.com/identity/protocols/OAuth2#installed))
-2.  Update `src/resources/client_secrets.json` with Client-Id and Client secret generated from your Cloud Project.
-3.  Compile and package source code into an executable JAR. <br>`mvn clean compile assembly:single`
-4.  Create a [Configuration file (csv)](#csv-file-format) with specified headers. (consider `sample-config.csv` as a reference)
-5.  Copy the jar file to the final executable location `cp target/dswqtobq-1.0-SNAPSHOT-jar-with-dependencies.jar ~/`
-6.  Run the jar file as
-```
-# go to your executable location
-cd ~ 
-# run the JAR file by specifying the configuraiton file as first parameter
-java -jar dswqtobq-1.0-SNAPSHOT-jar-with-dependencies.jar <location of configuration CSV file>
-```
 
-7.  This will prompt you to Login using your browser and store the credentials for next time, 
+### Create Google Cloud Project
+1.  [Create]() a Google Cloud Project and enable billing.
+1.  [Enable APIs](https://console.cloud.google.com/flows/enableapi?apiid=doubleclicksearch,bigquery.googleapis.com,storage.googleapis.com)
+1.  Login to your Google Cloud project and generate credentials for an Installed Application ([Details](https://developers.google.com/identity/protocols/OAuth2#installed))     
+1.  Update `src/resources/client_secrets.json` with Client id and Client secret generated from your Cloud Project.
+1.  Set Variables
+    ```shell
+    export PROJECT_ID="<google-cloud-project-id>"
+    export GCS_BUCKET_NAME="<name-of-cloud-storage-bucket>"
+    export BIGQUERY_DATASET_NAME="<name-of-dataset>"
+    
+    export PROJECT_ID="serverless-orchestration"
+    export GCS_BUCKET_NAME="sa360Test"
+    export BIGQUERY_DATASET_NAME="sa360_dataset"  
+    ```
+
+### Create Resources
+1.  Create Cloud Storage bucket to stage the reports.
+      ```shell      
+      gsutil mb -p ${PROJECT_ID} "gs://${GCS_BUCKET_NAME}" 
+      ```
+
+1.  Crate BigQuery dataset to store the reports
+    ```shell
+    bq mk --project_id="${PROJECT_ID}" ${BIGQUERY_DATASET_NAME}
+    ```
+
+### Compile and run
+1.  Compile and package source code into an executable JAR. 
+    ```shell
+    gradle clean fatJar
+    ```
+
+1.  Create a [Configuration file (csv)](#csv-file-format) with specified headers. (consider `sample-config.csv` as a reference)
+
+1.  Run the jar file as
+    ```shell
+    # run the JAR file by specifying the configuraiton file as first parameter
+    java -jar build/libs/dswqtobq-1.0.2-all.jar <location of configuration CSV file>
+    ```
+    >  Optionally, copy the jar file to the final executable location `cp build/libs/dswqtobq-1.0.2-all.jar~/`
+
+1.  This will prompt you to Login using your browser and store the credentials for next time, 
   If you are running this application on a VM/terminal, you can copy/paste the URL to your browser and paste the code back on the command line prompt.
 
-After this step you can schedule to run it automatically using cron.
-
-> Ensure that the user has at least **READ** permissions for SA360 and **EDITOR** Permissions for BigQuery.
-
-<br>
-
-> _Running on Google AppEngine or Google Cloud Functions is discouraged as WebQuery files can be quite large._
+    > Ensure that the user has at least **READ** permissions for SA360 and **EDITOR** Permissions for BigQuery.
+    
+    > You can schedule to run it automatically using cron, after this step.
+    
+> Running on Google AppEngine or Google Cloud Functions is discouraged as WebQuery files can be quite large._
 
 ### CSV File Format
 The CSV configuration file must contain following headers, The order does not matter.

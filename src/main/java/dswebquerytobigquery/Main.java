@@ -17,51 +17,51 @@ package dswebquerytobigquery;
 import static com.google.common.flogger.util.Checks.checkArgument;
 import static dswebquerytobigquery.Constants.MAX_THREADS;
 
-import com.google.api.client.auth.oauth2.Credential;
-import com.google.common.flogger.FluentLogger;
+import com.google.auth.oauth2.UserCredentials;
+import com.google.common.flogger.GoogleLogger;
 import java.io.File;
 import java.io.IOException;
-import java.time.Clock;
-import java.time.Instant;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Stream;
 
 class Main {
 
-  private static final FluentLogger logger = FluentLogger.forEnclosingClass();
+  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   public static void main(String[] args) throws IOException {
 
     checkArgument(args.length == 1, "Provide Configuration CSV");
     // Load Config File
     logger.atInfo().log("config file: %s", args[0]);
-    File configFile = new File(args[0]);
+    var configFile = new File(args[0]);
     TransferConfig[] transferConfigs = ConfigReader.loadConfig(configFile);
 
     logger.atFine().log("Loaded %s configurations", transferConfigs.length);
 
     // Get Google Credential
-    Credential credential = Authorizer.authorize();
-    logCredentialInfo(credential);
+    var userCredential = Authorizer.authorize();
+    logCredentialInfo(userCredential);
 
-    ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(MAX_THREADS);
+    var executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(MAX_THREADS);
 
     // Run all configs
     Stream.of(transferConfigs)
-        .map(config -> new TransferRunner(config, credential, BigQueryFactory.getDefaultInstance(),
-            StorageServiceFactory.getDefaultInstance()))
-        .forEach(executor::execute);
+      .map(config ->
+        new TransferRunner(
+          config,
+          userCredential,
+          BigQueryFactory.getDefaultInstance(userCredential),
+          StorageServiceFactory.getDefaultInstance(userCredential)))
+      .forEach(executor::execute);
 
     executor.shutdown();
   }
 
-  private static void logCredentialInfo(Credential credential) {
+  private static void logCredentialInfo(UserCredentials credential) {
     logger.atInfo()
-        .log("access_token: %s%nExpires:%s%nrefreshTokenPresent: %s",
-            credential.getAccessToken(),
-            Instant.ofEpochMilli(credential.getExpirationTimeMilliseconds())
-                .atZone(Clock.systemDefaultZone().getZone()),
-            (credential.getRefreshToken() != null));
+      .log("access_token: %s%nrefreshTokenPresent: %s",
+        credential.getAccessToken(),
+        (credential.getRefreshToken() != null));
   }
 }
