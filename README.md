@@ -1,4 +1,4 @@
-[![Total alerts](https://img.shields.io/lgtm/alerts/g/google/sa360-webquery-bigquery.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/google/sa360-webquery-bigquery/alerts/)
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/google/sa360-webquery-bigquery.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/google/sa360-webquery-bigquery/alerts/) [![Language grade: Java](https://img.shields.io/lgtm/grade/java/g/google/sa360-webquery-bigquery.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/google/sa360-webquery-bigquery/context:java)
 
 # SA360 WebQuery to BigQuery Exporter
 
