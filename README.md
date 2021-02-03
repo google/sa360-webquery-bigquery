@@ -60,7 +60,7 @@ First the system extracts the Report (in XML format) from SA360 and converts it 
 1.  Run the jar file as
     ```shell
     # run the JAR file by specifying the configuraiton file as first parameter
-    java -jar build/libs/dswqtobq-1.0.2-all.jar <location of configuration CSV file>
+    java -jar build/libs/dswqtobq-1.0.2-all.jar <location of configuration CSV file> <location-for-temp-files>
     ```
     >  Optionally, copy the jar file to the final executable location `cp build/libs/dswqtobq-1.0.2-all.jar~/`
 

@@ -14,7 +14,7 @@
 
 package dswebquerytobigquery;
 
-import static com.google.common.flogger.util.Checks.checkArgument;
+import static com.google.common.base.Preconditions.checkArgument;
 import static dswebquerytobigquery.Constants.MAX_THREADS;
 
 import com.google.auth.oauth2.UserCredentials;
@@ -31,10 +31,13 @@ class Main {
 
   public static void main(String[] args) throws IOException {
 
-    checkArgument(args.length == 1, "Provide Configuration CSV");
+    checkArgument(args.length == 2, "Provide Configuration CSV and location for csv reports");
     // Load Config File
     logger.atInfo().log("config file: %s", args[0]);
     var configFile = new File(args[0]);
+
+    var tmpFolder = new File(args[1]);
+    checkArgument(tmpFolder.isDirectory(), "provided URI is not a folder: %s", args[1]);
     TransferConfig[] transferConfigs = ConfigReader.loadConfig(configFile);
 
     logger.atFine().log("Loaded %s configurations", transferConfigs.length);
@@ -52,7 +55,8 @@ class Main {
           config,
           userCredential,
           BigQueryFactory.getDefaultInstance(userCredential),
-          StorageServiceFactory.getDefaultInstance(userCredential)))
+          StorageServiceFactory.getDefaultInstance(userCredential),
+          tmpFolder))
       .forEach(executor::execute);
 
     executor.shutdown();

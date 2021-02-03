@@ -31,15 +31,18 @@ class TransferRunner implements Runnable {
   private final UserCredentials credential;
   private final BigQueryFactory bigQueryFactory;
   private final StorageServiceFactory storageServiceFactory;
+  private final File csvFolder;
 
   public TransferRunner(TransferConfig xferConfig,
                         UserCredentials credential,
                         BigQueryFactory bigQueryFactory,
-                        StorageServiceFactory storageServiceFactory) {
+                        StorageServiceFactory storageServiceFactory,
+                        File csvFolder) {
     this.xferConfig = xferConfig;
     this.credential = credential;
     this.bigQueryFactory = bigQueryFactory;
     this.storageServiceFactory = storageServiceFactory;
+    this.csvFolder = csvFolder;
   }
 
   @Override
@@ -47,13 +50,13 @@ class TransferRunner implements Runnable {
     logger.atInfo().log("Processing: %s", xferConfig);
 
     var webQuery = new WebQuery(xferConfig.getWebQueryUrl(), credential);
+    // local file to store the report as CSV
+    var tempCsvFile = createCsvFile();
 
     try {
       logger.atInfo()
           .log("[Report %s] starting: url: %s", webQuery.getReportId(), webQuery.getQueryUrl());
 
-      // save to local file
-      var tempCsvFile = File.createTempFile(CSV_FILE_PREFIX, ".csv");
       logger.atInfo()
           .log("[Report %s] localFile: %s", webQuery.getReportId(), tempCsvFile.getAbsolutePath());
 
@@ -65,6 +68,9 @@ class TransferRunner implements Runnable {
           .uploadFile(tempCsvFile, xferConfig.getTempGcsBucketName(), "sa360tmp");
 
       logger.atInfo().log("GCS Link: %s", gcsLink);
+
+      //Delete local file
+      logger.atInfo().log("marking file for deletion: %s", tempCsvFile.getAbsolutePath());
 
       // Issue BigQuery command to consume file into a table
       var bqJob =
@@ -82,5 +88,18 @@ class TransferRunner implements Runnable {
       logger.atSevere().withCause(exception)
           .log("[Report %s] Error Processing", webQuery.getReportId());
     }
+    finally {
+      tempCsvFile.deleteOnExit();
+    }
+  }
+
+  private File createCsvFile() {
+    return new File(
+      csvFolder.getAbsolutePath() + "/" +
+      String.format(
+        "%s_%s_%s.csv",
+        CSV_FILE_PREFIX,
+        Thread.currentThread().getId(),
+        new WebQuery(xferConfig.getWebQueryUrl(), credential).getReportId()));
   }
 }
