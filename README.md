@@ -60,6 +60,7 @@ First the system extracts the Report (in XML format) from SA360 and converts it 
     ```shell
     gcloud compute instances create ${COMPUTE_ENGINE_INSTANCE_NAME} \
     --service-account="${SERVICE_ACCOUNT_NAME}@${PROJECT_ID}.iam.gserviceaccount.com" \
+    --image-project debian-cloud \
     --image-family debian-10
     ```
     
