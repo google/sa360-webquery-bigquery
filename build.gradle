@@ -28,7 +28,7 @@ dependencies {
 }
 
 group = 'gmp-tools'
-version = '1.0.2'
+version = '1.1'
 description = 'DS Web Query to BigQuery'
 java.sourceCompatibility = JavaVersion.VERSION_11
 

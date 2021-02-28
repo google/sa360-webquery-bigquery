@@ -16,7 +16,7 @@ package dswebquerytobigquery;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.auth.oauth2.UserCredentials;
+import com.google.auth.oauth2.GoogleCredentials;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,9 +38,9 @@ public class WebQuery {
 
   private final String queryUrl;
   private final String reportId;
-  private final UserCredentials credential;
+  private final GoogleCredentials credential;
 
-  public WebQuery(String queryUrl, UserCredentials credential) {
+  public WebQuery(String queryUrl, GoogleCredentials credential) {
     this.queryUrl = checkNotNull(queryUrl);
     this.reportId = extractReportId(queryUrl);
     this.credential = credential;
@@ -76,9 +76,9 @@ public class WebQuery {
    */
   public class WebQueryReader {
 
-    private final UserCredentials credential;
+    private final GoogleCredentials credential;
 
-    private WebQueryReader(UserCredentials credential) {
+    private WebQueryReader(GoogleCredentials credential) {
       this.credential = checkNotNull(credential);
     }
 

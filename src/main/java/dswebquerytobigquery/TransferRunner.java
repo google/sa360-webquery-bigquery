@@ -16,7 +16,7 @@ package dswebquerytobigquery;
 
 import static dswebquerytobigquery.Constants.CSV_FILE_PREFIX;
 
-import com.google.auth.oauth2.UserCredentials;
+import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.flogger.GoogleLogger;
 import java.io.File;
 
@@ -28,13 +28,13 @@ class TransferRunner implements Runnable {
   private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
 
   private final TransferConfig xferConfig;
-  private final UserCredentials credential;
+  private final GoogleCredentials credential;
   private final BigQueryFactory bigQueryFactory;
   private final StorageServiceFactory storageServiceFactory;
   private final File csvFolder;
 
   public TransferRunner(TransferConfig xferConfig,
-                        UserCredentials credential,
+                        GoogleCredentials credential,
                         BigQueryFactory bigQueryFactory,
                         StorageServiceFactory storageServiceFactory,
                         File csvFolder) {

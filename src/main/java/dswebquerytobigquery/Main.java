@@ -17,7 +17,10 @@ package dswebquerytobigquery;
 import static com.google.common.base.Preconditions.checkArgument;
 import static dswebquerytobigquery.Constants.MAX_THREADS;
 
-import com.google.auth.oauth2.UserCredentials;
+import com.google.api.services.bigquery.BigqueryScopes;
+import com.google.api.services.storage.StorageScopes;
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.common.collect.ImmutableList;
 import com.google.common.flogger.GoogleLogger;
 import java.io.File;
 import java.io.IOException;
@@ -42,30 +45,32 @@ class Main {
 
     logger.atFine().log("Loaded %s configurations", transferConfigs.length);
 
-    // Get Google Credential
-    var userCredential = Authorizer.authorize();
-    logCredentialInfo(userCredential);
-
     var executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(MAX_THREADS);
 
+    var serviceAccountCredentials = buildServiceAccountCredentials();
+    serviceAccountCredentials.refresh();
     // Run all configs
     Stream.of(transferConfigs)
       .map(config ->
         new TransferRunner(
           config,
-          userCredential,
-          BigQueryFactory.getDefaultInstance(userCredential),
-          StorageServiceFactory.getDefaultInstance(userCredential),
+          serviceAccountCredentials,
+          BigQueryFactory.getDefaultInstance(serviceAccountCredentials),
+          StorageServiceFactory.getDefaultInstance(serviceAccountCredentials),
           tmpFolder))
       .forEach(executor::execute);
 
     executor.shutdown();
+    logger.atInfo().log("Waiting for workers to complete.");
   }
 
-  private static void logCredentialInfo(UserCredentials credential) {
-    logger.atInfo()
-      .log("access_token: %s%nrefreshTokenPresent: %s",
-        credential.getAccessToken(),
-        (credential.getRefreshToken() != null));
+  private static GoogleCredentials buildServiceAccountCredentials() throws IOException{
+    return GoogleCredentials.getApplicationDefault()
+      .createScoped(
+        ImmutableList.<String>builder()
+          .addAll(StorageScopes.all())
+          .addAll(BigqueryScopes.all())
+          .add("https://www.googleapis.com/auth/doubleclicksearch")
+          .build());
   }
 }
