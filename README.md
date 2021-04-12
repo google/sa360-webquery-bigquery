@@ -28,7 +28,7 @@ First the system extracts the Report (in XML format) from SA360 and converts it 
 1.  [Enable APIs](https://console.cloud.google.com/flows/enableapi?apiid=doubleclicksearch,bigquery.googleapis.com,storage.googleapis.com).
 1.  [Create a Service Account](https://cloud.google.com/iam/docs/creating-managing-service-accounts#creating) to be used for running this project.
 1.  Grant the service account permissions
-    1. SA260 permission to retrieve webquery report
+    1. SA360 permission to retrieve webquery report
     1. BigQuery and Storage permission
 1.  Set Variables
     ```shell
@@ -60,11 +60,12 @@ First the system extracts the Report (in XML format) from SA360 and converts it 
     ```shell
     gcloud compute instances create ${COMPUTE_ENGINE_INSTANCE_NAME} \
     --service-account="${SERVICE_ACCOUNT_NAME}@${PROJECT_ID}.iam.gserviceaccount.com" \
+    --scopes=https://www.googleapis.com/auth/cloud-platform,https://www.googleapis.com/auth/doubleclicksearch \
     --image-project debian-cloud \
     --image-family debian-10
     ```
     
-    > Ensure that the user has at least **READ** permissions for SA360 and **EDITOR** Permissions for BigQuery.
+    > Ensure that the user/serviceAccount has at least **READ** permissions for SA360 and **EDITOR** Permissions for BigQuery.        
 
 ### Compile and run
 1.  Create a [Configuration file (csv)](#csv-file-format) with specified headers. (consider `sample-config.csv` as a reference)
@@ -83,13 +84,12 @@ First the system extracts the Report (in XML format) from SA360 and converts it 
     ```shell
     gcloud compute ssh ${COMPUTE_ENGINE_INSTANCE_NAME}
     ```
-    >  Install Java 11 on the VM 
-    >  `sudo apt install -y openjdk-11-jdk`
+    >  Install Java 11 on the VM if required: `sudo apt install -y openjdk-11-jdk`
 
 1.  Run the jar file
     ```shell
     # run the JAR file by specifying the configuraiton file as first parameter
-    java -jar build/libs/dswqtobq-1.1-all.jar <location of configuration CSV file>
+    java -jar dswqtobq-1.1-all.jar <location of configuration CSV file> <local-report-temp-folder>
     ```
     > You can schedule to run it automatically using cron, after this step.
 
