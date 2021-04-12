@@ -47,7 +47,7 @@ class Main {
 
     var executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(MAX_THREADS);
 
-    var serviceAccountCredentials = buildServiceAccountCredentials();
+    var serviceAccountCredentials = GoogleCredentials.getApplicationDefault();
     serviceAccountCredentials.refresh();
     // Run all configs
     Stream.of(transferConfigs)
@@ -62,15 +62,5 @@ class Main {
 
     executor.shutdown();
     logger.atInfo().log("Waiting for workers to complete.");
-  }
-
-  private static GoogleCredentials buildServiceAccountCredentials() throws IOException{
-    return GoogleCredentials.getApplicationDefault()
-      .createScoped(
-        ImmutableList.<String>builder()
-          .addAll(StorageScopes.all())
-          .addAll(BigqueryScopes.all())
-          .add("https://www.googleapis.com/auth/doubleclicksearch")
-          .build());
   }
 }
