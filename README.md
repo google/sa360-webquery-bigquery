@@ -72,7 +72,7 @@ First the system extracts the Report (in XML format) from SA360 and converts it 
 
 1.  Compile and package source code into an executable JAR. 
     ```shell
-    ./gradlew clean fatJar
+    ./gradlew clean shadowJar
     ```
 1.  Copy the fatJar to the Compute Engine instance.
     ```shell
