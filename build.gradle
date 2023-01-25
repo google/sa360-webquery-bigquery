@@ -25,6 +25,14 @@ repositories {
     gradlePluginPortal()
 }
 
+jar {
+    manifest {
+        attributes(
+            'Main-Class': 'dswebquerytobigquery.Main'
+        )
+    }
+}
+
 def autoValueVersion = "1.9"
 def floggerVersion = "0.7.4"
 def guavaVersion = "31.1-jre"
